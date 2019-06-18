@@ -1,0 +1,17 @@
+<%- include('bootheader') -%>
+<%- include('menubar') -%>
+    <div class="jumbotron">
+        <h1>New Post</h1>
+    </div>
+
+    <form method="post" action="/processform">
+      Title: <input type="text" name="url"> <br>
+      <textarea name="comment"></textarea>
+      <% if (loggedIn) { %>
+      <input type="submit">
+      <% } else { %>
+        You must be logged in to submit form info.
+        <% } %>
+    </form>
+
+<%- include('bootfooter') -%>
