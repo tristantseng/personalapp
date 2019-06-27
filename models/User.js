@@ -11,9 +11,11 @@ var userSchema = Schema( {
   googlename:String,
   googleemail:String,
   description: String,
-  classIds:[Schema.Types.ObjectId],
-  classCodes:[String],
-  taEmail: String
+  profilePicURL: String,
+  bio: String,
+  createdAt: Date,
+  userName: String,
+  lastUpdate: Date,
 } );
 
 module.exports = mongoose.model( 'User', userSchema );

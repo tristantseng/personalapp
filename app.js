@@ -20,6 +20,7 @@ db.once('open', function() {
 });
 
 const commentController = require('./controllers/commentController')
+const profileController = require('./controllers/profileController')
 
 // Authentication
 var GoogleStrategy = require('passport-google-oauth').OAuth2Strategy;
@@ -75,7 +76,7 @@ app.use((req,res,next) => {
     console.log('req.user = ')
     console.dir(req.user)
     // here is where we can handle whitelisted logins ...
-  
+
   }
   next()
 })
@@ -154,6 +155,16 @@ app.use(function(req,res,next){
 app.get('/', function(req, res, next) {
   res.render('index',{title:"YellowCartwheel"});
 });
+
+app.get('/editProfile',isLoggedIn, (req,res)=>{
+  res.render('editProfile')
+})
+
+app.post('/updateProfile',profileController.update)
+
+// add page for editProfile and views
+// add router for updateProfile and send browser to /profie
+
 
 app.get('/griddemo', function(req, res, next) {
   res.render('griddemo',{title:"Grid Demo"});
