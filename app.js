@@ -4,6 +4,8 @@ var path = require('path');
 var cookieParser = require('cookie-parser');
 var logger = require('morgan');
 
+//var apikey = require('./config/apikey');
+
 // AUTHENTICATION MODULES
 session = require("express-session"),
 bodyParser = require("body-parser"),
@@ -12,7 +14,7 @@ flash = require('connect-flash')
 // END OF AUTHENTICATION MODULES
 
 const mongoose = require( 'mongoose' );
-mongoose.connect( 'mongodb://localhost/mydb' );
+mongoose.connect( 'mongodb://localhost/mydb', { useNewUrlParser: true } );
 const db = mongoose.connection;
 db.on('error', console.error.bind(console, 'connection error:'));
 db.once('open', function() {
@@ -21,7 +23,8 @@ db.once('open', function() {
 
 const commentController = require('./controllers/commentController')
 const profileController = require('./controllers/profileController')
-
+const forumPostController = require('./controllers/forumPostController')
+const quiz2Controller = require('./controllers/quiz2Controller')
 // Authentication
 var GoogleStrategy = require('passport-google-oauth').OAuth2Strategy;
 // here we set up authentication with passport
@@ -48,7 +51,10 @@ app.use(express.static(path.join(__dirname, 'public')));
      HERE ARE THE AUTHENTICATION ROUTES
 **************************************************************************/
 
-app.use(session({ secret: 'zzbbyanana' }));
+app.use(session(
+  { secret: 'zzbbyanana',
+    resave: false,
+    saveUninitialized: false }));
 app.use(flash());
 app.use(passport.initialize());
 app.use(passport.session());
@@ -63,20 +69,12 @@ app.use((req,res,next) => {
   res.locals.title="YellowCartwheel"
   res.locals.loggedIn = false
   if (req.isAuthenticated()){
-    if (req.user.googleemail.endsWith("@brandeis.edu") ||
-          approvedLogins.includes(req.user.googleemail))
-          {
-            console.log("user has been Authenticated")
-            res.locals.user = req.user
-            res.locals.loggedIn = true
-          }
-    else {
-      res.locals.loggedIn = false
+      console.log("user has been Authenticated")
+      res.locals.user = req.user
+      res.locals.loggedIn = true
     }
-    console.log('req.user = ')
-    console.dir(req.user)
-    // here is where we can handle whitelisted logins ...
-
+  else {
+    res.locals.loggedIn = false
   }
   next()
 })
@@ -138,10 +136,21 @@ function isLoggedIn(req, res, next) {
 
 // we require them to be logged in to see their profile
 app.get('/profile', isLoggedIn, function(req, res) {
-        res.render('profile')/*, {
-            user : req.user // get the user out of session and pass to template
-        });*/
+        res.render('profile')
     });
+
+app.get('/editProfile',isLoggedIn, (req,res)=>{
+  res.render('editProfile')
+})
+
+app.get('/profiles', isLoggedIn, profileController.getAllProfiles);
+app.get('/showProfile/:id', isLoggedIn, profileController.getOneProfile);
+
+
+app.post('/updateProfile',profileController.update)
+
+// add page for editProfile and views
+// add router for updateProfile and send browser to /profie
 
 // END OF THE AUTHENTICATION ROUTES
 
@@ -156,34 +165,50 @@ app.get('/', function(req, res, next) {
   res.render('index',{title:"YellowCartwheel"});
 });
 
-app.get('/editProfile',isLoggedIn, (req,res)=>{
-  res.render('editProfile')
-})
+app.get('/quiz2',quiz2Controller.getAllMovieRatings)
 
-app.post('/updateProfile',profileController.update)
 
-// add page for editProfile and views
-// add router for updateProfile and send browser to /profie
+app.get('/recipes',forumPostController.getAllForumPosts)
+
+app.post('/recipes',forumPostController.saveForumPost)
+
+app.post('/forumDelete',forumPostController.deleteForumPost)
+
+app.get('/showPost/:id',
+        forumPostController.attachAllForumComments,
+        forumPostController.showOnePost)
+
+app.post('/saveForumComment',forumPostController.saveForumComment)
+
+
 
 
 app.get('/griddemo', function(req, res, next) {
   res.render('griddemo',{title:"Grid Demo"});
 });
 
+
+app.get('/recipe', function(req, res, next) {
+  res.render('recipe',{title:"Recipe"});
+});
+
+
+
+app.get('/bmidemo', (req, res) => {
+  res.render('bmidemo',{title:"BMI Demo"});
+});
+
+
+
+// myform demo ...
+
 app.get('/myform', function(req, res, next) {
   res.render('myform',{title:"Form Demo"});
 });
 
-
-app.use(function(req,res,next){
-  console.log("about to look for post routes!!!")
-  next()
+app.get('/recipes', function(req, res, next) {
+  res.render('recipes',{title:"Form Demo"});
 });
-
-function processFormData(req,res,next){
-  res.render('formdata',
-     {title:"Form Data",url:req.body.url, coms:req.body.theComments})
-}
 
 app.post('/processform', commentController.saveComment)
 
@@ -192,6 +217,13 @@ app.get('/showComments', commentController.getAllComments)
 // but here we are more direct
 
 app.get('/showComment/:id', commentController.getOneComment)
+
+function processFormData(req,res,next){
+  res.render('formdata',
+     {title:"Form Data",url:req.body.url, coms:req.body.theComments})
+}
+
+
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {

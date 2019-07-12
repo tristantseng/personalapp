@@ -1,33 +1,49 @@
 <%- include('bootheader') -%>
 <%- include('menubar') -%>
     <div class="jumbotron">
-        <h1>Forum</h1>
-        <p>Demonstrating a threaded forum</p>
+        <h1>Recipes</h1>
+        <p>Quiz3</p>
     </div>
 
-    <form method="post" action="/forum">
-      New Post: <br>
+
+    <form method="post" action="/recipes">
+      Dish Name: <br>
+      <textarea id="dishname" name="dishname"></textarea>
+      <br>
+      Ingredient: <br>
+      <textarea id="ingredient" name="ingredient"></textarea>
+      <br>
+      Describtion: <br>
       <textarea id="post" name="post"></textarea>
       <br>
       <input type="submit">
     </form>
 
+    <hr>
+
+
     <form method="post" action="/forumDelete">
+        <input type="submit" value="delete marked">
         <ol>
         <% for(i = 0; i<posts.length; i++){  %>
             <li> <a href="/showPost/<%= posts[i]._id %>">
                   <%= posts[i].userName %></a>
                   <i>
+
+
                  <%= posts[i].createdAt %></\/i> <br>
                  <% console.dir([posts[i].userId,user._id]) %>
                  <% if (posts[i].userId.equals(user._id)) { %>
                      <input type="checkbox" name="delete" value="<%= posts[i]._id %>">
                  <% } %>
-                 <%= posts[i].post %>
+
+                <big>Dish</big><pre><%= posts[i].dishname%></pre> <br>
+                <big>Ingredient</big> <pre><%= posts[i].ingredient %></pre><br>
+                <big>Describtion</big> <pre><%= posts[i].post %></pre>
+
              </li>
         <% } %>
         </ol>
-        <input type="submit" value="delete marked">
     </form>
 
 <%- include('bootfooter') -%>

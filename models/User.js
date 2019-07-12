@@ -13,9 +13,11 @@ var userSchema = Schema( {
   description: String,
   profilePicURL: String,
   bio: String,
-  createdAt: Date,
-  userName: String,
   lastUpdate: Date,
+  userName: String,
+  zipcode: String,
+  city: String,
+  state: String
 } );
 
 module.exports = mongoose.model( 'User', userSchema );

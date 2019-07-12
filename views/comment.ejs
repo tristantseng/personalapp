@@ -1,11 +1,10 @@
 <%- include('bootheader') -%>
 <%- include('menubar') -%>
     <div class="jumbotron">
-        <h1> <%= comment.url %> </h1>
-      
+        <h1>Comment for <%= comment._id %> </h1>
     </div>
-
-     <%= comment.comment %>
+    URL: <%= comment.url %> <br>
+    Comment: <%= comment.comment %>
     <hr>
-
+    
 <%- include('bootfooter') -%>
