@@ -168,7 +168,7 @@ app.get('/', function(req, res, next) {
 app.get('/quiz2',quiz2Controller.getAllMovieRatings)
 
 
-app.get('/recipes',forumPostController.getAllForumPosts)
+app.get('/recipes',isLoggedIn,forumPostController.getAllForumPosts)
 
 app.post('/recipes',forumPostController.saveForumPost)
 
