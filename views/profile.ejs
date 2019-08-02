@@ -1,19 +1,16 @@
 <%- include('bootheader') -%>
 <%- include('menubar') -%>
-    <div class="jumbotron">
-        <h1><%= user.googlename %>'s Profile</h1>
-        <img src="<%= user.profilePicURL %>" width="200">
-        <hr>
-        <p> User Name: <%= user.userName %>
-          <div>
-            Email: <%= user.googleemail %>
-            <div>
-        </p>
-
-         <p> Last updated: <%= user.lastUpdate %> </p>
+<div class="jumbotron">
+  <h1>MyDei$ Profile for <%= user.userName %></h1>
+  <img src="<%= user.profilePicURL%>" width="200">
+  <hr>
+  <p> Welcome <%= user.googlename %>
+    with email <%= user.googleemail %>
+    You are logged in to MyDei$.
+    <p> You are a  <%= status %>. </p>
+    <p> <%= user.zipcode %> <%= user.city %> <%= user.state %>
+      <p> Last updated on <%= user.lastUpdate %> </p>
+      <a href="/editProfile">edit profile</a>
     </div>
 
-      <a class="position-static" href="/editprofile" >Edit Profile </a>
-
-<%- include('bootfooter') -%>
-s
+    <%- include('bootfooter') -%>

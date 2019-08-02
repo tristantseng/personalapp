@@ -1,14 +1,18 @@
 <%- include('bootheader') -%>
 <%- include('menubar') -%>
-    <div class="jumbotron">
-        <h1>YellowCartwheel Profile for <%= profile.userName %></h1>
-        <img src="<%= profile.profilePicURL%>" width="200">
-        <hr>
-        <p> Welcome <%= profile.googlename %>
-            with email <%= profile.googleemail %>
-            You are logged in to YellowCartwheel.
-        </p>
-        <p> Last updated on <%= profile.lastUpdate %> </p>
-    </div>
+<div class="jumbotron">
+  <h1>My Posts</h1>
+</div>
+
+<img src="<%= profile.profilePicURL%>" width="200">
+<hr>
+
+
+
+<%- include('booklist') -%>
+
+
+<p> Last updated on <%= profile.lastUpdate %> </p>
+
 
 <%- include('bootfooter') -%>

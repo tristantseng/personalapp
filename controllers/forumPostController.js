@@ -2,6 +2,9 @@
 const ForumPost = require( '../models/ForumPost' );
 const ForumComment = require( '../models/ForumComment' );
 
+
+
+
 exports.saveForumPost = ( req, res ) => {
   //console.log("in saveSkill!")
   //console.dir(req)
@@ -11,23 +14,37 @@ exports.saveForumPost = ( req, res ) => {
 
   let newForumPost = new ForumPost(
    {
+
     userId: req.user._id,
-    userName:req.user.googlename,
-    post: req.body.post,
-    createdAt: new Date(),
-    ingredient: req.body.ingredient,
-    dishname:req.body.dishname,
-   }
-  )
+    userName: req.user.googlename,
+    post: req.body.post, //title
+    createdAt:  new Date(),
+    price: req.body.price,
+    condition: req.body.condition,
+    contact: req.body.contact,
+    contactInfo: req.body.contactInfo,
+    course: req.body.course,
+    description:req.body.description,
+    itemPic: req.body.itemPic,
+    product: req.body.product,
+    status: req.body.status,
+    interest: req.body.interest,
+  })
+
+
+  console.log("formumPost is ")
+  console.log("Price =" + req.body.price)
+  console.log("Price =" + req.body.description)
+  console.dir(newForumPost)
 
   //console.log("skill = "+newSkill)
 
   newForumPost.save()
     .then( () => {
-      res.redirect( 'recipes' );
+      res.redirect( '/showProfile/'+req.user._id );
     } )
     .catch( error => {
-      res.send( error );
+      res.send( "ForumPostError is "+error );
     } );
 };
 
@@ -35,11 +52,15 @@ exports.saveForumPost = ( req, res ) => {
 // this displays all of the skills
 exports.getAllForumPosts = ( req, res, next ) => {
   //gconsle.log('in getAllSkills')
+  console.log("hello hello hello hello")
   ForumPost.find({}).sort({createdAt: -1})
+
     .exec()
-    .then( ( posts ) => {
-      res.render('recipes',{posts:posts,title:"Forum"})
-    } )
+    .then( ( posts) => {
+      res.render( 'Market', {
+          title:"market",posts:posts
+        } );
+      } )
     .catch( ( error ) => {
       console.log( error.message );
       return [];
@@ -49,23 +70,41 @@ exports.getAllForumPosts = ( req, res, next ) => {
     } );
 };
 
-exports.deleteForumPost = (req, res) => {
+
+exports.deletePost = (req, res) => {
+  console.log("in deletePost")
+  let deleteId = req.params.postid
+
+  ForumPost.deleteOne({_id:deleteId})
+           .exec()
+           .then(()=>{res.redirect('/showProfile/'+req.user._id)})
+           .catch((error)=>{res.send(error)})
+}
+
+
+
+
+exports.deleteMultiplePosts = (req, res) => {
+  // this is when you use checkboxes with name="delete"
+  // to specify which posts should be deleted
+  // it will delete one or none or many depending on how many
+  // boxes are checked ...
   console.log("in deleteForumPost")
   let deleteId = req.body.delete
   if (typeof(deleteId)=='string') {
       // you are deleting just one thing ...
       ForumPost.deleteOne({_id:deleteId})
            .exec()
-           .then(()=>{res.redirect('/recipes')})
+           .then(()=>{res.redirect('/market')})
            .catch((error)=>{res.send(error)})
   } else if (typeof(deleteId)=='object'){
       ForumPost.deleteMany({_id:{$in:deleteId}})
            .exec()
-           .then(()=>{res.redirect('/recipes')})
+           .then(()=>{res.redirect('/market')})
            .catch((error)=>{res.send(error)})
   } else if (typeof(deleteId)=='undefined'){
       //console.log("This is if they didn't select a skill")
-      res.redirect('/recipes')
+      res.redirect('/market')
   } else {
     //console.log("This shouldn't happen!")
     res.send(`unknown deleteId: ${deleteId} Contact the Developer!!!`)
@@ -83,7 +122,8 @@ exports.showOnePost = ( req, res ) => {
     .exec()
     .then( ( forumPost ) => {
       res.render( 'forumPost', {
-        post:forumPost, title:"Forum Post"
+        post:forumPost,
+        title:"Forum Post"
       } );
     } )
     .catch( ( error ) => {
@@ -98,7 +138,7 @@ exports.showOnePost = ( req, res ) => {
 
 exports.saveForumComment = (req,res) => {
   if (!res.locals.loggedIn) {
-    return res.send("You must be logged in to post a comment to the forum.")
+    return res.send("You must be logged in to post a product.")
   }
 
   let newForumComment = new ForumComment(
@@ -145,4 +185,44 @@ exports.attachAllForumComments = ( req, res, next ) => {
     .then( () => {
       //console.log( 'skill promise complete' );
     } );
+};
+
+
+
+exports.update = ( req, res ) => {
+
+
+  ForumPost.findOne(req.params.postId)
+
+  .exec()
+  .then((p) => {
+    console.log(req.params.postId)
+
+    p.userId= req.user._id,
+    p.userName= req.user.googlename,
+    p.post= req.body.post,
+    p.createdAt=  new Date(),
+    p.price=req.body.price,
+    p.condition= req.body.condition,
+    p.contact= req.body.contact,
+    p.contactinfo= req.body.contactinfo,
+    p.course= req.body.course,
+    p.description=req.body.description,
+    p.itemPic=req.body.itemPic,
+    p.product= req.body.product
+
+
+    p.save()
+    .then(() => {
+      res.redirect('/showProfile/'+req.user._id);
+    })
+
+  })
+  .catch(function (error) {
+    // handle error
+    console.log(error);
+  })
+  .finally(function () {
+    // always executed
+  });
 };

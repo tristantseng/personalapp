@@ -12,19 +12,25 @@ bodyParser = require("body-parser"),
 User = require( './models/User' ),
 flash = require('connect-flash')
 // END OF AUTHENTICATION MODULES
+MONGOLAB_URI = "mongodb://heroku_w4sxst21:l3jbvnggf9fp7vfns81bk06dam@ds253567.mlab.com:53567/heroku_w4sxst21"
+LOCAL_URI = 'mongodb://localhost/mydeis'
 
 const mongoose = require( 'mongoose' );
-mongoose.connect( 'mongodb://localhost/mydb', { useNewUrlParser: true } );
+mongoose.connect( MONGOLAB_URI);
 const db = mongoose.connection;
 db.on('error', console.error.bind(console, 'connection error:'));
 db.once('open', function() {
   console.log("we are connected!!!")
 });
 
-const commentController = require('./controllers/commentController')
+
 const profileController = require('./controllers/profileController')
 const forumPostController = require('./controllers/forumPostController')
-const quiz2Controller = require('./controllers/quiz2Controller')
+const RideShareController = require('./controllers/RideShareController')
+const furniturePostController = require('./controllers/furniturePostController')
+const otherPostController = require('./controllers/furniturePostController')
+
+
 // Authentication
 var GoogleStrategy = require('passport-google-oauth').OAuth2Strategy;
 // here we set up authentication with passport
@@ -51,10 +57,7 @@ app.use(express.static(path.join(__dirname, 'public')));
      HERE ARE THE AUTHENTICATION ROUTES
 **************************************************************************/
 
-app.use(session(
-  { secret: 'zzbbyanana',
-    resave: false,
-    saveUninitialized: false }));
+app.use(session({ secret: 'zzbbyanana' }));
 app.use(flash());
 app.use(passport.initialize());
 app.use(passport.session());
@@ -62,11 +65,11 @@ app.use(bodyParser.urlencoded({ extended: false }));
 
 
 
-const approvedLogins = ["tjhickey724@gmail.com","csjbs2018@gmail.com"];
+const owners = ["chenj53@brandeis.edu", "jaytseng@brandeis.edu", "tristantseng@brandeis.edu", "yutdong@brandeis.edu" ]
 
 // here is where we check on their logged in status
 app.use((req,res,next) => {
-  res.locals.title="YellowCartwheel"
+  res.locals.title="MyDeis"
   res.locals.loggedIn = false
   if (req.isAuthenticated()){
       console.log("user has been Authenticated")
@@ -76,8 +79,27 @@ app.use((req,res,next) => {
   else {
     res.locals.loggedIn = false
   }
+  //console.log('req.user = ')
+  //console.dir(req.user)
+  res.locals.status = 'none'
+  if (req.user){
+       if (owners.indexOf(req.user.googleemail)>-1){
+         console.log("Owner has logged in")
+         res.locals.status = 'owner'
+       }
+       else {
+         console.log('student has logged in')
+         res.locals.status = 'student'
+       }
+  }
+  console.log("res.locals = "+JSON.stringify(res.locals))
+
   next()
 })
+
+app.get('/', function(req, res, next) {
+  res.render('index', { title: 'Express' });
+ });
 
 
 
@@ -86,6 +108,8 @@ app.use((req,res,next) => {
 app.get('/loginerror', function(req,res){
   res.render('loginerror',{})
 })
+
+
 
 app.get('/login', function(req,res){
   res.render('login',{})
@@ -135,19 +159,38 @@ function isLoggedIn(req, res, next) {
 }
 
 // we require them to be logged in to see their profile
-app.get('/profile', isLoggedIn, function(req, res) {
-        res.render('profile')
+app.get('/profile', isLoggedIn,
+    function(req, res) {
+        res.redirect('showProfile/'+req.user._id)
     });
 
 app.get('/editProfile',isLoggedIn, (req,res)=>{
   res.render('editProfile')
 })
 
+app.get('/editPost/:id',isLoggedIn, (req,res)=>{
+    res.render('editPost')
+})
+
+app.post('/processedit',isLoggedIn,forumPostController.update);
+
 app.get('/profiles', isLoggedIn, profileController.getAllProfiles);
-app.get('/showProfile/:id', isLoggedIn, profileController.getOneProfile);
+
+app.get('/showProfile/:id',
+        profileController.addProfile,
+        profileController.addPosts,
+        profileController.addRides,
+        (req,res) => {
+          res.render( 'showProfile',
+               { title:"Profile"
+          } );
+        })
+
 
 
 app.post('/updateProfile',profileController.update)
+app.post('/updatePost',forumPostController.update)
+
 
 // add page for editProfile and views
 // add router for updateProfile and send browser to /profie
@@ -161,67 +204,142 @@ app.use(function(req,res,next){
 });
 
 
-app.get('/', function(req, res, next) {
-  res.render('index',{title:"YellowCartwheel"});
+
+app.get('/about', function(req, res, next) {
+  res.render('about');
 });
 
-app.get('/quiz2',quiz2Controller.getAllMovieRatings)
+app.get('/', function(req, res, next) {
+  res.render('index',{title:"Home Page"});
+});
 
 
-app.get('/recipes',isLoggedIn,forumPostController.getAllForumPosts)
+app.post('/processbook',forumPostController.saveForumPost)
 
-app.post('/recipes',forumPostController.saveForumPost)
 
-app.post('/forumDelete',forumPostController.deleteForumPost)
+//app.post('/processfurniture',furniturePostController.saveFurniturePost)
+
+//app.post('/processother',otherPostController.saveOtherPost)
+
+
+
+
+
+
+
+app.get('/market',forumPostController.getAllForumPosts)
+
+//app.get('/market',furniturePostController.getAllFurniturePosts)
+
+//app.get('/market',otherPostController.getAllOtherPosts)
+
+
+
+
+app.post('/market',forumPostController.saveForumPost)
+
+//app.post('/market',furniturePostController.saveFurniturePost)
+
+//app.post('/market',otherPostController.saveOtherPost)
+
+
+
+//app.post('/forumDelete',forumPostController.deleteForumPost)
 
 app.get('/showPost/:id',
         forumPostController.attachAllForumComments,
-        forumPostController.showOnePost)
+        forumPostController.showOnePost,
+)
 
 app.post('/saveForumComment',forumPostController.saveForumComment)
 
+app.get('/deletePost/:postid',forumPostController.deletePost)
 
 
 
-app.get('/griddemo', function(req, res, next) {
-  res.render('griddemo',{title:"Grid Demo"});
+app.use('/deleteRideShare/:postid',RideShareController.deleteRideShare)
+
+app.get('/rideShare',isLoggedIn, RideShareController.getAllRideShares)
+
+app.post('/rideShare',RideShareController.saveRideShare)
+
+app.get('/showRide/:id',
+        RideShareController.attachAllRideShareComment,
+        RideShareController.showOneRide)
+
+app.post('/saveRideShareComment',RideShareController.saveRideShareComment)
+
+
+
+
+
+
+app.get('/SellItem', function(req, res, next) {
+  res.render('SellItem',{title:"SellItem"});
+});
+
+app.get('/BookSell', isLoggedIn, function(req, res, next) {
+  res.render('Booksell',{title:"BookSell"});
+});
+
+app.get('/FurnitureSell', isLoggedIn, function(req, res, next) {
+  res.render('FurnitureSell',{title:"Furniture Sell"});
+});
+
+app.get('/OtherSell', isLoggedIn, function(req, res, next) {
+  res.render('OtherSell',{title:"OtherSell"});
 });
 
 
-app.get('/recipe', function(req, res, next) {
-  res.render('recipe',{title:"Recipe"});
+app.get('/Market', function(req, res, next) {
+  res.render('Market',{title:"Market"});
+});
+
+
+app.get('/Interested/:postId', function(req, res, next) {
+  res.render('Interested',{title:"Interested"});
+});
+
+app.get('/RideShareForm', function(req, res, next) {
+  res.render('RideShareForm',{title:"RideShareForm"});
+});
+
+app.get('/Events', function(req, res, next) {
+  res.render('Events',{title:"Events"});
+});
+
+app.get('/Housing', function(req, res, next) {
+  res.render('Housing',{title:"Housing"});
+});
+
+app.get('/Academic', function(req, res, next) {
+  res.render('Academic',{title:"Academic"});
+});
+
+app.get('/Confessions', function(req, res, next) {
+  res.render('Confessions',{title:"Confessions"});
+});
+
+app.get('/Gaming', function(req, res, next) {
+  res.render('Gaming',{title:"Gaming"});
+});
+
+app.get('/Sports', function(req, res, next) {
+  res.render('Sports',{title:"Sports"});
 });
 
 
 
-app.get('/bmidemo', (req, res) => {
-  res.render('bmidemo',{title:"BMI Demo"});
+app.get('/sellwhat', function(req, res, next) {
+  res.render('sellwhat',{title:"sellwhat"});
 });
 
 
-
-// myform demo ...
-
-app.get('/myform', function(req, res, next) {
-  res.render('myform',{title:"Form Demo"});
+app.get('/index2.0', function(req, res, next) {
+  res.render('index2.0',{title:"index2.0"});
 });
 
-app.get('/recipes', function(req, res, next) {
-  res.render('recipes',{title:"Form Demo"});
-});
 
-app.post('/processform', commentController.saveComment)
-
-app.get('/showComments', commentController.getAllComments)
-// app.use('/', indexRouter);  // this is how we use a router to handle the / path
-// but here we are more direct
-
-app.get('/showComment/:id', commentController.getOneComment)
-
-function processFormData(req,res,next){
-  res.render('formdata',
-     {title:"Form Data",url:req.body.url, coms:req.body.theComments})
-}
 
 
 
